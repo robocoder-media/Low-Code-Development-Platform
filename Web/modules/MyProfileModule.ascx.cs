@@ -30,12 +30,23 @@ namespace RO.Web
                     string loginUrl = System.Web.Security.FormsAuthentication.LoginUrl;
                     if (string.IsNullOrEmpty(loginUrl)) loginUrl = "~/MyAccount.aspx";
                     SignIn.Visible = true; SignIn.NavigateUrl = loginUrl + (loginUrl.Contains("?") ? "&" : "?") + "logo=N";
-                    SignoutPanel.Visible = false; return;
+                    SignoutPanel.Visible = false;
+                    cLoginName.Visible = false;
+                    cAppDomainUrl.Visible = false;
+                    return;
                 }
                 else
                 {
+                    string extAppDomainUrl =
+                        !string.IsNullOrWhiteSpace(System.Configuration.ConfigurationManager.AppSettings["ExtBaseUrl"])
+                            ? System.Configuration.ConfigurationManager.AppSettings["ExtBaseUrl"]
+                            : Request.Url.AbsoluteUri.Replace(Request.Url.Query, "").Replace(Request.Url.Segments[Request.Url.Segments.Length - 1], "");
+                    cAppDomainUrl.Text = extAppDomainUrl.EndsWith("/") ? extAppDomainUrl.Substring(0, extAppDomainUrl.Length - 1) : extAppDomainUrl;
+                    cAppDomainUrl.Visible = true;
                     SignIn.Visible = false;
                     SignoutPanel.Visible = true;
+                    cLoginName.Text = LUser.LoginName;
+                    cLoginName.Visible = true;
                 }
                 if (LUser != null)
                 {
@@ -266,7 +277,7 @@ namespace RO.Web
             if (!string.IsNullOrEmpty(webAddress) && !webAddress.StartsWith("http"))
             {
                 string path = Request.Url.GetComponents(UriComponents.Path, UriFormat.Unescaped);
-                webAddress = path.StartsWith(Config.AppNameSpace + "/") ? "/" + Config.AppNameSpace + "/" + webAddress : "/" + webAddress;
+                webAddress = path.ToUpper().StartsWith(Config.AppNameSpace.ToUpper() + "/") ? "/" + Config.AppNameSpace + "/" + webAddress : "/" + webAddress;
                 webAddress = Request.Url.GetLeftPart(UriPartial.Scheme).Replace("http:",Config.EnableSsl ? "https:" : "http:") + Request.Url.Host + Request.Url.AbsolutePath.Replace("/" + path, webAddress);
                 homeQs = (new Uri(webAddress)).GetComponents(UriComponents.Query, UriFormat.Unescaped);
             }
